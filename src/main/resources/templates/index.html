@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Gallery</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Photo Gallery</h1>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light mode">
+            <span class="theme-toggle-icon">🌓</span>
+        </button>
+    </div>
+
+    <div id="photo-carousel" class="photo-carousel">
+        <!-- Photos will be loaded here dynamically -->
+        <div class="loading">Loading photos...</div>
+    </div>
+
+    <div class="pagination">
+        <button id="prev-page" disabled>Previous</button>
+        <span id="page-info">Page 1</span>
+        <button id="next-page">Next</button>
+    </div>
+</div>
+
+<!-- Modal for displaying full-size images -->
+<div id="photo-modal" class="modal">
+    <span class="close-button">&times;</span>
+    <img class="modal-content" id="full-size-image" alt="" src="">
+</div>
+
+<script src="/js/gallery.js"></script>
+</body>
+</html>
