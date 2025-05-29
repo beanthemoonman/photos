@@ -13,8 +13,28 @@ services:
       - photos_cache:/app/cache
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - JAVA_OPTS=-Xmx512m
+      # Enhanced memory and GC settings
+      - JAVA_OPTS=-Xmx384m -Xms128m -XX:MaxRAMPercentage=75.0 -XX:+UseContainerSupport -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+      # Spring thread pool settings
+      - SPRING_TASK_EXECUTION_POOL_CORE-SIZE=4
+      - SPRING_TASK_EXECUTION_POOL_MAX-SIZE=8
+      - SPRING_TASK_EXECUTION_POOL_QUEUE-CAPACITY=100
+      - SPRING_TASK_SCHEDULING_POOL_SIZE=2
+      # Tomcat thread optimizations
+      - SERVER_TOMCAT_THREADS_MAX=50
+      - SERVER_TOMCAT_THREADS_MIN-SPARE=5
+      - SERVER_TOMCAT_MAX-CONNECTIONS=100
+      # Database connection pool optimization
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM-POOL-SIZE=5
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
 volumes:
   photos_photos:
