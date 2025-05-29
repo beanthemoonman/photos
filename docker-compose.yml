@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  photos-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: photos-app
+    ports:
+      - "8080:8080"
+    volumes:
+      - photos_photos:/app/photos
+      - photos_cache:/app/cache
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - JAVA_OPTS=-Xmx512m
+    restart: unless-stopped
+
+volumes:
+  photos_photos:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/http/beanthemoonman.io/photos
+  photos_cache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/http/beanthemoonman.io/cache
