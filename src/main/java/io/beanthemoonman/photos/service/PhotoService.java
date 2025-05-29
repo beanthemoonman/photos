@@ -153,10 +153,12 @@ public class PhotoService {
   }
 
   /**
-   * Get the thumbnail image data for a photo.
+   * Retrieves the thumbnail image associated with the given image ID.
+   * If a cached thumbnail exists, it is returned; otherwise, a new thumbnail
+   * is generated, cached, and returned.
    *
-   * @param id The photo ID (filename)
-   * @return The thumbnail image data as bytes, or null if not found
+   * @param id the unique identifier for the image
+   * @return a byte array containing the thumbnail image, or null if an error occurs
    */
   public byte[] getThumbnailImage(String id) {
     try {
@@ -232,6 +234,19 @@ public class PhotoService {
     try (Stream<Path> paths = Files.list(directoryPath)) {
       return paths.filter(Files::isRegularFile)
           .filter(this::isImageFile)
+          .sorted((path1, path2) -> {
+            try {
+              // Get the last modified time attribute for each file
+              // Use "lastModifiedTime" or "creationTime" based on your needs
+              long time1 = Files.getLastModifiedTime(path1).toMillis();
+              long time2 = Files.getLastModifiedTime(path2).toMillis();
+              // Sort in descending order (newest first)
+              return Long.compare(time2, time1);
+            } catch (IOException e) {
+              logger.error("Error comparing file timestamps", e);
+              return 0;
+            }
+          })
           .collect(Collectors.toList());
     }
   }
