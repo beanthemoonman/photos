@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,9 +35,13 @@ public class PhotoService {
   public PhotoService(PhotosConfig config) {
     this.config = config;
 
+    createDirectoryIfNotExists(config.getDirectoryPath());
+    createDirectoryIfNotExists(Paths.get("cache"));
+  }
+
+  private void createDirectoryIfNotExists(Path directoryPath) {
     // Create photos directory if it doesn't exist
     try {
-      Path directoryPath = config.getDirectoryPath();
       if (!Files.exists(directoryPath)) {
         Files.createDirectories(directoryPath);
         logger.info("Created photos directory: {}", directoryPath);
@@ -144,12 +149,18 @@ public class PhotoService {
     try {
       Path photoPath = findPhotoById(id);
       if (photoPath != null) {
-        return createThumbnail(photoPath);
+        Path cachePath = Paths.get("cache/" + id);
+        if (Files.exists(cachePath) && Files.isRegularFile(cachePath)) {
+          return Files.readAllBytes(cachePath);
+        } else {
+          byte[] imageData = createThumbnail(photoPath);
+          Files.write(cachePath, imageData);
+          return imageData;
+        }
       }
     } catch (IOException e) {
       logger.error("Error creating thumbnail for image with id: {}", id, e);
     }
-
     return null;
   }
 
