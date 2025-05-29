@@ -14,8 +14,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,14 +35,23 @@ public class PhotoService {
 
   private final PhotosConfig config;
 
+  private static final String CACHE_DIR = "cache";
+
+  private static final ConcurrentMap<String, String> shaCache = new ConcurrentHashMap<>();
+
   @Autowired
   public PhotoService(PhotosConfig config) {
     this.config = config;
 
     createDirectoryIfNotExists(config.getDirectoryPath());
-    createDirectoryIfNotExists(Paths.get("cache"));
+    createDirectoryIfNotExists(Paths.get(CACHE_DIR));
   }
 
+  /**
+   * Creates the specified directory if it does not already exist.
+   *
+   * @param directoryPath the path of the directory to create
+   */
   private void createDirectoryIfNotExists(Path directoryPath) {
     // Create photos directory if it doesn't exist
     try {
@@ -149,7 +162,14 @@ public class PhotoService {
     try {
       Path photoPath = findPhotoById(id);
       if (photoPath != null) {
-        Path cachePath = Paths.get("cache/" + id);
+        String photoHash;
+        if (shaCache.containsKey(id)) {
+          photoHash = shaCache.get(id);
+        } else {
+         photoHash = bytesToSha256(Files.readAllBytes(photoPath));
+         shaCache.put(id, photoHash);
+        }
+        Path cachePath = Paths.get(CACHE_DIR + "/" + photoHash + ".jpg");
         if (Files.exists(cachePath) && Files.isRegularFile(cachePath)) {
           return Files.readAllBytes(cachePath);
         } else {
@@ -158,11 +178,44 @@ public class PhotoService {
           return imageData;
         }
       }
-    } catch (IOException e) {
+    } catch (IOException | NoSuchAlgorithmException e) {
       logger.error("Error creating thumbnail for image with id: {}", id, e);
     }
     return null;
   }
+
+  /**
+   * Converts the given byte array into a SHA-256 hash and returns it as a hexadecimal string.
+   *
+   * @param bytes the input byte array to be hashed
+   * @return a hexadecimal string representing the SHA-256 hash of the input byte array
+   * @throws NoSuchAlgorithmException if the SHA-256 algorithm is not available in the environment
+   */
+  public String bytesToSha256(byte[] bytes) throws NoSuchAlgorithmException {
+    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    byte[] hashBytes = digest.digest(bytes);
+
+    return bytesToHex(hashBytes);
+  }
+
+  /**
+   * Converts an array of bytes into a hexadecimal string representation.
+   *
+   * @param hash the byte array to be converted into a hexadecimal string
+   * @return a string representing the hexadecimal equivalent of the provided byte array
+   */
+  private static String bytesToHex(byte[] hash) {
+    StringBuilder hexString = new StringBuilder(2 * hash.length);
+    for (byte b : hash) {
+      String hex = Integer.toHexString(0xff & b);
+      if (hex.length() == 1) {
+        hexString.append('0');
+      }
+      hexString.append(hex);
+    }
+    return hexString.toString();
+  }
+
 
   /**
    * List all photo files in the configured directory.

@@ -6,6 +6,9 @@ import io.beanthemoonman.photos.service.PhotoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +16,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * REST controller for photo operations.
@@ -70,13 +75,21 @@ public class PhotoController {
    * @param id The photo ID
    * @return The thumbnail image
    */
+
   @GetMapping(value = "/{id}/thumbnail", produces = MediaType.IMAGE_JPEG_VALUE)
   public ResponseEntity<byte[]> getThumbnail(@PathVariable String id) {
     logger.info("Getting thumbnail for photo with id: {}", id);
     byte[] imageData = photoService.getThumbnailImage(id);
 
     if (imageData != null) {
-      return ResponseEntity.ok(imageData);
+      // Define caching behavior
+      CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.DAYS)
+          .cachePublic();
+
+      return ResponseEntity.ok()
+          .cacheControl(cacheControl)
+          .body(imageData);
+
     } else {
       return ResponseEntity.notFound().build();
     }
