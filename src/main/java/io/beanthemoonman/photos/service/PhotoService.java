@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import io.github.bucket4j.Bucket;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,6 +40,10 @@ public class PhotoService {
   private static final String CACHE_DIR = "cache";
 
   private static final ConcurrentMap<String, String> shaCache = new ConcurrentHashMap<>();
+
+  private static final Bucket bucket = Bucket.builder()
+      .addLimit(limit -> limit.capacity(20).refillIntervally(100, Duration.ofMinutes(1)))
+      .build();
 
   @Autowired
   public PhotoService(PhotosConfig config) {
@@ -161,6 +167,11 @@ public class PhotoService {
    * @return a byte array containing the thumbnail image, or null if an error occurs
    */
   public byte[] getThumbnailImage(String id) {
+    try {
+      bucket.asBlocking().tryConsume(1, Duration.ofSeconds(30));
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
     try {
       Path photoPath = findPhotoById(id);
       if (photoPath != null) {

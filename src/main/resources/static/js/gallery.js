@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // State
     let currentPage = 0;
-    let pageSize = 48;
+    let pageSize = 36;
     let totalPages = 0;
 
     // Theme functionality
