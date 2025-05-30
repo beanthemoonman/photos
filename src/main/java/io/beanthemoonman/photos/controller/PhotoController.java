@@ -6,8 +6,6 @@ import io.beanthemoonman.photos.service.PhotoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -83,12 +81,9 @@ public class PhotoController {
 
     if (imageData != null) {
       // Define caching behavior
-      CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.DAYS)
-          .cachePublic();
+      CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.DAYS).cachePublic();
 
-      return ResponseEntity.ok()
-          .cacheControl(cacheControl)
-          .body(imageData);
+      return ResponseEntity.ok().cacheControl(cacheControl).body(imageData);
 
     } else {
       return ResponseEntity.notFound().build();
