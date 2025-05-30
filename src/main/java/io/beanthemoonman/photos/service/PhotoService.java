@@ -3,27 +3,27 @@ package io.beanthemoonman.photos.service;
 import io.beanthemoonman.photos.config.PhotosConfig;
 import io.beanthemoonman.photos.model.Photo;
 import io.beanthemoonman.photos.model.PhotoPage;
+import io.beanthemoonman.photos.utility.ThumbnailHasher;
 import net.coobird.thumbnailator.Thumbnails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import io.github.bucket4j.Bucket;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static io.beanthemoonman.photos.utility.ThumbnailHasher.CACHE_DIR;
+import static io.beanthemoonman.photos.utility.Utility.bytesToSha256;
+import static io.beanthemoonman.photos.utility.Utility.createDirectoryIfNotExists;
 
 /**
  * Service for handling photo operations.
@@ -37,37 +37,12 @@ public class PhotoService {
 
   private final PhotosConfig config;
 
-  private static final String CACHE_DIR = "cache";
-
-  private static final ConcurrentMap<String, String> shaCache = new ConcurrentHashMap<>();
-
-  private static final Bucket bucket = Bucket.builder()
-      .addLimit(limit -> limit.capacity(20).refillIntervally(100, Duration.ofMinutes(1)))
-      .build();
-
   @Autowired
   public PhotoService(PhotosConfig config) {
     this.config = config;
 
     createDirectoryIfNotExists(config.getDirectoryPath());
     createDirectoryIfNotExists(Paths.get(CACHE_DIR));
-  }
-
-  /**
-   * Creates the specified directory if it does not already exist.
-   *
-   * @param directoryPath the path of the directory to create
-   */
-  private void createDirectoryIfNotExists(Path directoryPath) {
-    // Create photos directory if it doesn't exist
-    try {
-      if (!Files.exists(directoryPath)) {
-        Files.createDirectories(directoryPath);
-        logger.info("Created photos directory: {}", directoryPath);
-      }
-    } catch (IOException e) {
-      logger.error("Failed to create photos directory", e);
-    }
   }
 
   /**
@@ -159,28 +134,23 @@ public class PhotoService {
   }
 
   /**
-   * Retrieves the thumbnail image associated with the given image ID.
-   * If a cached thumbnail exists, it is returned; otherwise, a new thumbnail
-   * is generated, cached, and returned.
+   * Retrieves the thumbnail image associated with the given image ID. If a cached thumbnail exists, it is returned;
+   * otherwise, a new thumbnail is generated, cached, and returned.
    *
    * @param id the unique identifier for the image
    * @return a byte array containing the thumbnail image, or null if an error occurs
    */
   public byte[] getThumbnailImage(String id) {
     try {
-      bucket.asBlocking().tryConsume(1, Duration.ofSeconds(30));
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
-    try {
+      var shaCache = ThumbnailHasher.getInstance().getShaCache();
       Path photoPath = findPhotoById(id);
       if (photoPath != null) {
         String photoHash;
         if (shaCache.containsKey(id)) {
           photoHash = shaCache.get(id);
         } else {
-         photoHash = bytesToSha256(Files.readAllBytes(photoPath));
-         shaCache.put(id, photoHash);
+          photoHash = bytesToSha256(Files.readAllBytes(photoPath));
+          shaCache.put(id, photoHash);
         }
         Path cachePath = Paths.get(CACHE_DIR + "/" + photoHash + ".jpg");
         if (Files.exists(cachePath) && Files.isRegularFile(cachePath)) {
@@ -198,39 +168,6 @@ public class PhotoService {
   }
 
   /**
-   * Converts the given byte array into a SHA-256 hash and returns it as a hexadecimal string.
-   *
-   * @param bytes the input byte array to be hashed
-   * @return a hexadecimal string representing the SHA-256 hash of the input byte array
-   * @throws NoSuchAlgorithmException if the SHA-256 algorithm is not available in the environment
-   */
-  public String bytesToSha256(byte[] bytes) throws NoSuchAlgorithmException {
-    MessageDigest digest = MessageDigest.getInstance("SHA-256");
-    byte[] hashBytes = digest.digest(bytes);
-
-    return bytesToHex(hashBytes);
-  }
-
-  /**
-   * Converts an array of bytes into a hexadecimal string representation.
-   *
-   * @param hash the byte array to be converted into a hexadecimal string
-   * @return a string representing the hexadecimal equivalent of the provided byte array
-   */
-  private static String bytesToHex(byte[] hash) {
-    StringBuilder hexString = new StringBuilder(2 * hash.length);
-    for (byte b : hash) {
-      String hex = Integer.toHexString(0xff & b);
-      if (hex.length() == 1) {
-        hexString.append('0');
-      }
-      hexString.append(hex);
-    }
-    return hexString.toString();
-  }
-
-
-  /**
    * List all photo files in the configured directory.
    *
    * @return A list of paths to photo files
@@ -244,8 +181,7 @@ public class PhotoService {
 
     try (Stream<Path> paths = Files.list(directoryPath)) {
       return paths.filter(Files::isRegularFile)
-          .filter(this::isImageFile)
-          .sorted((path1, path2) -> {
+          .filter(this::isImageFile).sorted((path1, path2) -> {
             try {
               // Get the last modified time attribute for each file
               // Use "lastModifiedTime" or "creationTime" based on your needs
