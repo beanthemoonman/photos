@@ -27,8 +27,6 @@ build/
 
 ### VS Code ###
 .vscode/
-/photos/
-photos
 
 /cache/
 cache

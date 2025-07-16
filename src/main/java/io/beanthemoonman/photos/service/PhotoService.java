@@ -4,24 +4,23 @@ import io.beanthemoonman.photos.config.PhotosConfig;
 import io.beanthemoonman.photos.model.Photo;
 import io.beanthemoonman.photos.model.PhotoPage;
 import io.beanthemoonman.photos.utility.ThumbnailHasher;
-import net.coobird.thumbnailator.Thumbnails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.beanthemoonman.photos.utility.ThumbnailHasher.CACHE_DIR;
+import io.beanthemoonman.photos.utility.FileFilter;
+
+import static io.beanthemoonman.photos.utility.FileFilter.getNameWithoutExtension;
 import static io.beanthemoonman.photos.utility.Utility.bytesToSha256;
 import static io.beanthemoonman.photos.utility.Utility.createDirectoryIfNotExists;
 
@@ -36,13 +35,17 @@ public class PhotoService {
   private static final String[] SUPPORTED_EXTENSIONS = { ".jpg", ".jpeg", ".png", ".gif" };
 
   private final PhotosConfig config;
+  private final ThumbnailService thumbnailService;
+  private final ThumbnailHasher thumbnailHasher;
 
   @Autowired
-  public PhotoService(PhotosConfig config) {
+  public PhotoService(PhotosConfig config, ThumbnailService thumbnailService, ThumbnailHasher thumbnailHasher) {
     this.config = config;
+    this.thumbnailService = thumbnailService;
+    this.thumbnailHasher = thumbnailHasher;
 
     createDirectoryIfNotExists(config.getDirectoryPath());
-    createDirectoryIfNotExists(Paths.get(CACHE_DIR));
+    createDirectoryIfNotExists(thumbnailHasher.getCacheDir());
   }
 
   /**
@@ -142,7 +145,7 @@ public class PhotoService {
    */
   public byte[] getThumbnailImage(String id) {
     try {
-      var shaCache = ThumbnailHasher.getInstance().getShaCache();
+      var shaCache = thumbnailHasher.getShaCache();
       Path photoPath = findPhotoById(id);
       if (photoPath != null) {
         String photoHash;
@@ -152,11 +155,11 @@ public class PhotoService {
           photoHash = bytesToSha256(Files.readAllBytes(photoPath));
           shaCache.put(id, photoHash);
         }
-        Path cachePath = Paths.get(CACHE_DIR + "/" + photoHash + ".jpg");
+        Path cachePath = thumbnailHasher.getCacheDir().resolve(photoHash + ".jpg");
         if (Files.exists(cachePath) && Files.isRegularFile(cachePath)) {
           return Files.readAllBytes(cachePath);
         } else {
-          byte[] imageData = createThumbnail(photoPath);
+          byte[] imageData = thumbnailService.createThumbnail(photoPath);
           Files.write(cachePath, imageData);
           return imageData;
         }
@@ -181,7 +184,7 @@ public class PhotoService {
 
     try (Stream<Path> paths = Files.list(directoryPath)) {
       return paths.filter(Files::isRegularFile)
-          .filter(this::isImageFile).sorted((path1, path2) -> {
+          .filter(FileFilter::isImageFile).sorted((path1, path2) -> {
             try {
               // Get the last modified time attribute for each file
               // Use "lastModifiedTime" or "creationTime" based on your needs
@@ -209,14 +212,14 @@ public class PhotoService {
     Path directoryPath = config.getDirectoryPath();
     Path photoPath = directoryPath.resolve(id);
 
-    if (Files.exists(photoPath) && Files.isRegularFile(photoPath) && isImageFile(photoPath)) {
+    if (Files.exists(photoPath) && Files.isRegularFile(photoPath) && FileFilter.isImageFile(photoPath)) {
       return photoPath;
     }
 
     // If the exact filename wasn't found, try to find a file with the same name but different extension
     try (Stream<Path> paths = Files.list(directoryPath)) {
       return paths.filter(Files::isRegularFile)
-          .filter(this::isImageFile)
+          .filter(FileFilter::isImageFile)
           .filter(path -> {
             String filename = path.getFileName().toString();
             String nameWithoutExt = getNameWithoutExtension(filename);
@@ -227,52 +230,5 @@ public class PhotoService {
     }
   }
 
-  /**
-   * Check if a file is an image based on its extension.
-   *
-   * @param path The file path
-   * @return true if the file is an image, false otherwise
-   */
-  private boolean isImageFile(Path path) {
-    String filename = path.getFileName().toString().toLowerCase();
-    for (String ext : SUPPORTED_EXTENSIONS) {
-      if (filename.endsWith(ext)) {
-        return true;
-      }
-    }
-    return false;
-  }
 
-  /**
-   * Get the filename without its extension.
-   *
-   * @param filename The filename
-   * @return The filename without extension
-   */
-  private String getNameWithoutExtension(String filename) {
-    int lastDotIndex = filename.lastIndexOf('.');
-    if (lastDotIndex > 0) {
-      return filename.substring(0, lastDotIndex);
-    }
-    return filename;
-  }
-
-  /**
-   * Create a thumbnail for an image.
-   *
-   * @param imagePath The path to the original image
-   * @return The thumbnail image data as bytes
-   * @throws IOException If an I/O error occurs
-   */
-  private byte[] createThumbnail(Path imagePath) throws IOException {
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-    Thumbnails.of(imagePath.toFile())
-        .size(config.getThumbnail().getWidth(), config.getThumbnail().getHeight())
-        .keepAspectRatio(true)
-        .outputFormat("jpg")
-        .toOutputStream(outputStream);
-
-    return outputStream.toByteArray();
-  }
 }

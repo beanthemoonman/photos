@@ -1,5 +1,8 @@
 package io.beanthemoonman.photos.utility;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,18 +11,21 @@ import java.security.NoSuchAlgorithmException;
 
 public class Utility {
 
+  private static final Logger logger = LoggerFactory.getLogger(Utility.class);
+
   /**
    * Creates the specified directory if it does not already exist.
    *
    * @param directoryPath the path of the directory to create
    */
   public static void createDirectoryIfNotExists(Path directoryPath) {
-    // Create photos directory if it doesn't exist
     try {
       if (!Files.exists(directoryPath)) {
         Files.createDirectories(directoryPath);
+        logger.info("Created directory: {}", directoryPath);
       }
-    } catch (IOException _) {
+    } catch (IOException e) {
+      logger.error("Failed to create directory: {}", directoryPath, e);
     }
   }
 

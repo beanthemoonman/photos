@@ -3,6 +3,7 @@ package io.beanthemoonman.photos.service;
 import io.beanthemoonman.photos.config.PhotosConfig;
 import io.beanthemoonman.photos.model.Photo;
 import io.beanthemoonman.photos.model.PhotoPage;
+import io.beanthemoonman.photos.utility.ThumbnailHasher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -12,11 +13,14 @@ import org.mockito.MockitoAnnotations;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 class PhotoServiceTest {
@@ -30,6 +34,12 @@ class PhotoServiceTest {
   @Mock
   private PhotosConfig.Thumbnail thumbnail;
 
+  @Mock
+  private ThumbnailService thumbnailService;
+
+  @Mock
+  private ThumbnailHasher thumbnailHasher;
+
   private PhotoService photoService;
 
   @BeforeEach
@@ -42,13 +52,22 @@ class PhotoServiceTest {
     when(photosConfig.getThumbnail()).thenReturn(thumbnail);
     when(thumbnail.getWidth()).thenReturn(400);
     when(thumbnail.getHeight()).thenReturn(400);
+    when(thumbnailHasher.getCacheDir()).thenReturn(tempDir.resolve("cache"));
+    
+    // Mock the SHA cache
+    ConcurrentMap<String, String> mockShaCache = new ConcurrentHashMap<>();
+    when(thumbnailHasher.getShaCache()).thenReturn(mockShaCache);
+    
+    // Mock thumbnail creation to return dummy data for any path
+    when(thumbnailService.createThumbnail(any(Path.class)))
+        .thenReturn("mock thumbnail data".getBytes());
 
     // Create a test image file
     Path testImagePath = tempDir.resolve("test.jpg");
     Files.write(testImagePath, "test image data".getBytes());
 
-    // Initialize service with mocked config
-    photoService = new PhotoService(photosConfig);
+    // Initialize service with mocked dependencies
+    photoService = new PhotoService(photosConfig, thumbnailService, thumbnailHasher);
   }
 
   @Test
@@ -114,8 +133,8 @@ class PhotoServiceTest {
     // and returns some data
     byte[] thumbnailData = photoService.getThumbnailImage("test.jpg");
 
-    // In a real test, we would verify the thumbnail properties,
-    // but that would require a real image file
-    assertNull(thumbnailData); // Will be null because our test image isn't a real image
+    // Verify that thumbnail data is returned
+    assertNotNull(thumbnailData);
+    assertArrayEquals("mock thumbnail data".getBytes(), thumbnailData);
   }
 }
