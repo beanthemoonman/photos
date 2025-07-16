@@ -35,13 +35,6 @@ public class ThumbnailHasher {
     createDirectoryIfNotExists(cacheDir);
   }
 
-  public static ThumbnailHasher getInstance() {
-    if (instance == null) {
-      throw new IllegalStateException("ThumbnailHasher not initialized. Use Spring injection instead.");
-    }
-    return instance;
-  }
-
   public ConcurrentMap<String, String> getShaCache() {
     return shaCache;
   }

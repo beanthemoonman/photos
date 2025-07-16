@@ -12,7 +12,6 @@ import java.io.IOException;
 public class PhotosApplication {
 
   public static void main(String[] args) throws IOException {
-    ThumbnailHasher.getInstance().boot();
     SpringApplication.run(PhotosApplication.class, args);
   }
 
