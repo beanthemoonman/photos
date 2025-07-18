@@ -3,13 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alex's Photos</title>
+    <title th:text="${website.title}">Photos Gallery</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" th:href="${website.faviconPath}" href="/favicon.ico">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" th:content="${website.title}" content="Photos Gallery">
+    <meta property="og:description" th:content="${website.description}" content="Photography Portfolio">
+    <meta property="og:image" th:content="${website.ogImage}" th:if="${!#strings.isEmpty(website.ogImage)}">
+    <meta property="og:url" th:content="${website.ogUrl}" th:if="${!#strings.isEmpty(website.ogUrl)}">
+    <meta property="og:site_name" th:content="${website.ogSiteName}" th:if="${!#strings.isEmpty(website.ogSiteName)}">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" th:content="${website.title}" content="Photos Gallery">
+    <meta property="twitter:description" th:content="${website.description}" content="Photography Portfolio">
+    <meta property="twitter:image" th:content="${website.ogImage}" th:if="${!#strings.isEmpty(website.ogImage)}">
+    
+    <!-- Meta Description -->
+    <meta name="description" th:content="${website.description}" content="Photography Portfolio">
+    
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>Alex's Photos</h1>
+        <h1 th:text="${website.title}">Photos Gallery</h1>
         <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light mode">
             <span class="theme-toggle-icon">🌓</span>
         </button>
@@ -20,10 +41,9 @@
         <div class="loading">Loading photos...</div>
     </div>
 
-    <div class="pagination">
-        <button id="prev-page" disabled>Previous</button>
-        <span id="page-info">Page 1</span>
-        <button id="next-page">Next</button>
+    <div id="loading-more" class="loading-more" style="display: none;">
+        <div class="loading-spinner"></div>
+        <span>Loading more photos...</span>
     </div>
 </div>
 

@@ -92,29 +92,38 @@ h1 {
 /* Photo carousel */
 .photo-carousel {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
 }
 
 .photo {
     background-color: var(--card-bg-color);
-    border-radius: 5px;
-    box-shadow: 0 2px 5px var(--card-shadow);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px var(--card-shadow);
     overflow: hidden;
     transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    display: block;
 }
 
 .photo:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px var(--card-shadow-hover);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 8px 25px var(--card-shadow-hover);
 }
 
 .photo img {
     width: 100%;
-    height: 200px;
+    height: 220px;
     object-fit: cover;
     cursor: pointer;
+    transition: transform 0.3s ease;
+    display: block;
+    vertical-align: bottom;
+}
+
+.photo:hover img {
+    transform: scale(1.05);
 }
 
 /* Loading and error states */
@@ -129,36 +138,35 @@ h1 {
     color: var(--error-color);
 }
 
-/* Pagination */
-.pagination {
+/* Loading indicator for infinite scroll */
+.loading-more {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 20px;
-}
-
-.pagination button {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    margin: 0 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.pagination button:hover:not([disabled]) {
-    background-color: var(--primary-color-hover);
-}
-
-.pagination button[disabled] {
-    background-color: var(--disabled-color);
-    cursor: not-allowed;
-}
-
-#page-info {
+    padding: 40px 20px;
+    gap: 12px;
+    color: var(--text-color);
     font-size: 16px;
+    font-weight: 500;
+}
+
+.loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--disabled-color);
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Smooth scroll behavior */
+html {
+    scroll-behavior: smooth;
 }
 
 /* Modal for full-size images */
@@ -209,6 +217,31 @@ h1 {
     }
 
     .modal-content {
-        max-width: 95%;
+        max-width: 85%;
+        max-height: 70vh;
+        margin: 80px 80px 20px 20px;
+        object-fit: contain;
+    }
+    
+    .close-button {
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        font-size: 32px;
+        background-color: rgba(0, 0, 0, 0.8);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1002;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+    
+    .close-button:hover {
+        background-color: rgba(0, 0, 0, 0.9);
+        border-color: rgba(255, 255, 255, 0.5);
     }
 }

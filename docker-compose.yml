@@ -26,6 +26,17 @@ services:
       - SERVER_TOMCAT_MAX-CONNECTIONS=100
       # Database connection pool optimization
       - SPRING_DATASOURCE_HIKARI_MAXIMUM-POOL-SIZE=5
+      # Photos application configuration
+      - PHOTOS_DIRECTORY=/app/photos
+      - PHOTOS_THUMBNAIL_WIDTH=400
+      - PHOTOS_THUMBNAIL_HEIGHT=400
+      # Website metadata configuration
+      - PHOTOS_WEBSITE_TITLE=Photos
+      - PHOTOS_WEBSITE_DESCRIPTION=Photography Portfolio
+      - PHOTOS_WEBSITE_FAVICON_PATH=/favicon.ico
+      - PHOTOS_WEBSITE_OG_IMAGE=
+      - PHOTOS_WEBSITE_OG_URL=
+      - PHOTOS_WEBSITE_OG_SITE_NAME=Photo Gallery
     restart: unless-stopped
     deploy:
       resources:
