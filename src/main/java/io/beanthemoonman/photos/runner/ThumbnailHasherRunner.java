@@ -7,8 +7,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class ThumbnailHasherRunner implements CommandLineRunner {
 
+  private final ThumbnailHasher thumbnailHasher;
+
+  public ThumbnailHasherRunner(ThumbnailHasher thumbnailHasher) {
+    this.thumbnailHasher = thumbnailHasher;
+  }
+
   @Override
   public void run(String... args) throws Exception {
-    ThumbnailHasher.instance.boot();
+    thumbnailHasher.boot();
   }
 }

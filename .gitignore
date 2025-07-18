@@ -30,3 +30,5 @@ build/
 
 /cache/
 cache
+
+docker-compose.yml

@@ -21,7 +21,6 @@ import static io.beanthemoonman.photos.utility.Utility.createDirectoryIfNotExist
 public class ThumbnailHasher {
 
   private static final Logger logger = LoggerFactory.getLogger(ThumbnailHasher.class);
-  public static volatile ThumbnailHasher instance;
 
   private final ConcurrentMap<String, String> shaCache = new ConcurrentHashMap<>();
   private final PhotosConfig config;
