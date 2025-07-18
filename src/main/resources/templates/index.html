@@ -25,7 +25,7 @@
     <!-- Meta Description -->
     <meta name="description" th:content="${website.description}" content="Photography Portfolio">
     
-    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" th:href="@{/css/styles.css(v=${commitId})}" href="/css/styles.css">
 </head>
 <body>
 <div class="container">
@@ -53,6 +53,6 @@
     <img class="modal-content" id="full-size-image" alt="" src="">
 </div>
 
-<script src="/js/gallery.js"></script>
+<script th:src="@{/js/gallery.js(v=${commitId})}" src="/js/gallery.js"></script>
 </body>
 </html>

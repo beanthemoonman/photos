@@ -1,6 +1,7 @@
 package io.beanthemoonman.photos.controller;
 
 import io.beanthemoonman.photos.config.PhotosConfig;
+import io.beanthemoonman.photos.service.GitInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,10 +14,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class WebController {
 
   private final PhotosConfig config;
+  private final GitInfoService gitInfoService;
 
   @Autowired
-  public WebController(PhotosConfig config) {
+  public WebController(PhotosConfig config, GitInfoService gitInfoService) {
     this.config = config;
+    this.gitInfoService = gitInfoService;
   }
 
   /**
@@ -28,6 +31,7 @@ public class WebController {
   @GetMapping("/")
   public String index(Model model) {
     model.addAttribute("website", config.getWebsite());
+    model.addAttribute("commitId", gitInfoService.getCommitIdAbbrev());
     return "index";
   }
 }
