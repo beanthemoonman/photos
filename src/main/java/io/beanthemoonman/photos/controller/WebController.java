@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class WebController {
 
   private final PhotosConfig config;
+
   private final GitInfoService gitInfoService;
 
   @Autowired

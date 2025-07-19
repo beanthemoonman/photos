@@ -17,6 +17,8 @@ public class PhotosConfig {
 
   private Thumbnail thumbnail = new Thumbnail();
 
+  private Website website = new Website();
+
   public String getDirectory() {
     return directory;
   }
@@ -36,8 +38,6 @@ public class PhotosConfig {
   public void setThumbnail(Thumbnail thumbnail) {
     this.thumbnail = thumbnail;
   }
-
-  private Website website = new Website();
 
   public Website getWebsite() {
     return website;
@@ -71,10 +71,15 @@ public class PhotosConfig {
 
   public static class Website {
     private String title = "Photos Gallery";
+
     private String description = "A beautiful photo gallery";
+
     private String faviconPath = "/favicon.ico";
+
     private String ogImage = "";
+
     private String ogUrl = "";
+
     private String ogSiteName = "";
 
     public String getTitle() {

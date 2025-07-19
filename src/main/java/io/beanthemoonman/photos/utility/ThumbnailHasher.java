@@ -23,8 +23,11 @@ public class ThumbnailHasher {
   private static final Logger logger = LoggerFactory.getLogger(ThumbnailHasher.class);
 
   private final ConcurrentMap<String, String> shaCache = new ConcurrentHashMap<>();
+
   private final PhotosConfig config;
+
   private final ThumbnailService thumbnailService;
+
   private final Path cacheDir;
 
   public ThumbnailHasher(PhotosConfig config, ThumbnailService thumbnailService) {

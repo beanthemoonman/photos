@@ -11,21 +11,21 @@ import java.nio.file.Path;
 @Service
 public class ThumbnailService {
 
-    private final PhotosConfig config;
+  private final PhotosConfig config;
 
-    public ThumbnailService(PhotosConfig config) {
-        this.config = config;
-    }
+  public ThumbnailService(PhotosConfig config) {
+    this.config = config;
+  }
 
-    public byte[] createThumbnail(Path imagePath) throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+  public byte[] createThumbnail(Path imagePath) throws IOException {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        Thumbnails.of(imagePath.toFile())
-                .size(config.getThumbnail().getWidth(), config.getThumbnail().getHeight())
-                .keepAspectRatio(true)
-                .outputFormat("jpg")
-                .toOutputStream(outputStream);
+    Thumbnails.of(imagePath.toFile())
+        .size(config.getThumbnail().getWidth(), config.getThumbnail().getHeight())
+        .keepAspectRatio(true)
+        .outputFormat("jpg")
+        .toOutputStream(outputStream);
 
-        return outputStream.toByteArray();
-    }
+    return outputStream.toByteArray();
+  }
 }

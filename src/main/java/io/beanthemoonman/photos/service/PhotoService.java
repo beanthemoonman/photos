@@ -3,6 +3,7 @@ package io.beanthemoonman.photos.service;
 import io.beanthemoonman.photos.config.PhotosConfig;
 import io.beanthemoonman.photos.model.Photo;
 import io.beanthemoonman.photos.model.PhotoPage;
+import io.beanthemoonman.photos.utility.FileFilter;
 import io.beanthemoonman.photos.utility.ThumbnailHasher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import io.beanthemoonman.photos.utility.FileFilter;
 
 import static io.beanthemoonman.photos.utility.FileFilter.getNameWithoutExtension;
 import static io.beanthemoonman.photos.utility.Utility.bytesToSha256;
@@ -35,7 +34,9 @@ public class PhotoService {
   private static final String[] SUPPORTED_EXTENSIONS = { ".jpg", ".jpeg", ".png", ".gif" };
 
   private final PhotosConfig config;
+
   private final ThumbnailService thumbnailService;
+
   private final ThumbnailHasher thumbnailHasher;
 
   @Autowired
@@ -229,6 +230,5 @@ public class PhotoService {
           .orElse(null);
     }
   }
-
 
 }
