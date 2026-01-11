@@ -1,7 +1,7 @@
 # Multi-stage build for Photos application
 
 # Build stage
-FROM eclipse-temurin:24-jdk-alpine AS build
+FROM eclipse-temurin:25-jdk-alpine AS build
 WORKDIR /app
 
 # Copy Maven wrapper and pom.xml
@@ -18,7 +18,7 @@ RUN chmod +x ./mvnw
 RUN ./mvnw package -DskipTests
 
 # Runtime stage
-FROM eclipse-temurin:24-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
 # Create volume for photos directory

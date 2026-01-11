@@ -31,8 +31,6 @@ public class PhotoService {
 
   private static final Logger logger = LoggerFactory.getLogger(PhotoService.class);
 
-  private static final String[] SUPPORTED_EXTENSIONS = { ".jpg", ".jpeg", ".png", ".gif" };
-
   private final PhotosConfig config;
 
   private final ThumbnailService thumbnailService;

@@ -31,4 +31,8 @@ build/
 /cache/
 cache
 
+IMG*
+R00*
+PXL*
+
 docker-compose.yml
