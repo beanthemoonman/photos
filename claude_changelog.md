@@ -71,3 +71,7 @@ had identical position/order before vs after (0 moved); panoramas still full-wid
   photo's `/full` URL (`target="_blank" rel="noopener"`). Verified via Playwright.
 
 App restarted via the JetBrains `PhotosApplication` run config to pick up the new template + class.
+
+## 2026-06-24 — Fix CI Java version
+
+CI was installing JDK 24 while the project targets Java 25, causing `release version 25 not supported`. Bumped setup-java in `.github/workflows/build.yml` to 25.
