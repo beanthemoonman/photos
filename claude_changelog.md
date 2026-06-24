@@ -75,3 +75,10 @@ App restarted via the JetBrains `PhotosApplication` run config to pick up the ne
 ## 2026-06-24 — Fix CI Java version
 
 CI was installing JDK 24 while the project targets Java 25, causing `release version 25 not supported`. Bumped setup-java in `.github/workflows/build.yml` to 25.
+
+## 2026-06-24 — Fix OOM: honor JAVA_OPTS in Docker
+
+- `Dockerfile`: changed the exec-form ENTRYPOINT to `sh -c "exec java $JAVA_OPTS -jar /app/app.jar"`.
+  The old form did no shell expansion, so the `-Xmx`/`MaxRAMPercentage` settings in
+  docker-compose were silently ignored — the JVM ran on ~25% of the 512M limit (~128MB heap),
+  too little to decode full-res JPEGs into BufferedImages and OOMed during thumbnail pre-gen.

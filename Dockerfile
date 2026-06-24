@@ -30,5 +30,6 @@ COPY --from=build /app/target/*.jar app.jar
 # Expose the default Spring Boot port
 EXPOSE 8080
 
-# Set the command to run the application
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# Set the command to run the application.
+# sh -c so $JAVA_OPTS from the environment is honored (exec form does no shell expansion).
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]
