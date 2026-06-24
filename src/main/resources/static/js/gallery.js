@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const loadingMoreElement = document.getElementById('loading-more');
     const modal = document.getElementById('photo-modal');
     const fullSizeImage = document.getElementById('full-size-image');
+    const modalDate = document.getElementById('modal-date');
+    const modalExif = document.getElementById('modal-exif');
+    const modalFullSize = document.getElementById('modal-fullsize');
     const closeButton = document.querySelector('.close-button');
     const themeToggle = document.getElementById('theme-toggle');
 
@@ -58,7 +61,35 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateThemeIcon(theme) {
-        themeToggle.querySelector('.theme-toggle-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+        // Pill shows the theme you can switch TO.
+        const dark = theme === 'dark';
+        themeToggle.querySelector('.theme-toggle-icon').textContent = dark ? '☀' : '☾';
+        themeToggle.querySelector('.theme-toggle-label').textContent = dark ? 'Light' : 'Dark';
+    }
+
+    // Grid masonry: a tile spans ceil(height / rowSlot) of the 8px auto-rows.
+    // Must match grid-auto-rows (8px) and gap (responsive: 18 / 10) in styles.css.
+    function rowSlot() {
+        const styles = getComputedStyle(photoCarousel);
+        const row = parseFloat(styles.gridAutoRows) || 8;
+        const gap = parseFloat(styles.rowGap) || 0;
+        return { row, gap };
+    }
+
+    function setSpan(figure) {
+        const { row, gap } = rowSlot();
+        const h = figure.getBoundingClientRect().height;
+        if (!h) return; // not laid out yet (e.g. unknown aspect ratio) — onload retries
+        figure.style.gridRowEnd = `span ${Math.ceil((h + gap) / (row + gap))}`;
+    }
+
+    // Recompute every tile's span (column count / width changed on resize).
+    let resizeTimer;
+    function recomputeSpans() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            photoCarousel.querySelectorAll('.photo').forEach(setSpan);
+        }, 120);
     }
 
     // Load photos for the current page
@@ -100,21 +131,39 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Add photos to the carousel
                 data.photos.forEach(photo => {
-                    const photoElement = document.createElement('div');
-                    photoElement.className = 'photo';
+                    const figure = document.createElement('figure');
+                    figure.className = 'photo';
 
                     const img = document.createElement('img');
                     img.src = photo.thumbnailUrl;
-                    img.alt = photo.filename;
-                    img.dataset.fullSizeUrl = photo.fullSizeUrl;
+                    img.alt = photo.title || photo.filename;
+                    img.loading = 'lazy';
+                    // Reserve native proportions so masonry doesn't reflow once images load.
+                    if (photo.width > 0 && photo.height > 0) {
+                        img.style.aspectRatio = `${photo.width} / ${photo.height}`;
+                        // Very wide panoramas become unreadable slivers in one narrow column,
+                        // so let them span the full gallery width instead.
+                        if (photo.width / photo.height > 2.4) {
+                            figure.classList.add('panorama');
+                        }
+                    }
 
-                    // Add click event to show the full-size image
-                    img.addEventListener('click', function () {
-                        showFullSizeImage(this.dataset.fullSizeUrl);
+                    const caption = document.createElement('figcaption');
+                    caption.textContent = photo.title || photo.filename;
+
+                    figure.appendChild(img);
+                    figure.appendChild(caption);
+                    figure.addEventListener('click', function () {
+                        showFullSizeImage(photo);
                     });
 
-                    photoElement.appendChild(img);
-                    photoCarousel.appendChild(photoElement);
+                    photoCarousel.appendChild(figure);
+                    // Size the grid span from the (aspect-ratio-reserved) layout height.
+                    setSpan(figure);
+                    // Fallback for photos without known dimensions: span once loaded.
+                    if (!(photo.width > 0 && photo.height > 0)) {
+                        img.addEventListener('load', () => setSpan(figure), { once: true });
+                    }
                 });
                 
                 // Hide loading indicator
@@ -151,21 +200,39 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Show full-size image in modal
-    function showFullSizeImage(url) {
-        fullSizeImage.src = url;
-        modal.style.display = 'block';
+    // Populate and show the split modal for a photo
+    function openModal(photo) {
+        fullSizeImage.src = photo.fullSizeUrl;
+        fullSizeImage.alt = photo.title || photo.filename;
+        modalFullSize.href = photo.fullSizeUrl;
+        modalDate.textContent = photo.dateTaken || '';
+
+        // Rebuild the EXIF table from whatever rows the backend supplied.
+        modalExif.innerHTML = '';
+        (photo.exif || []).forEach(row => {
+            const dt = document.createElement('dt');
+            dt.textContent = row.label;
+            const dd = document.createElement('dd');
+            dd.textContent = row.value;
+            modalExif.appendChild(dt);
+            modalExif.appendChild(dd);
+        });
+
+        modal.classList.add('open');
         modalOpen = true;
-        
-        // Add a history entry for the modal
-        history.pushState({ modalOpen: true, imageUrl: url }, '', '');
     }
-    
+
+    // Show full-size image in modal (from a tile click) and push a history entry
+    function showFullSizeImage(photo) {
+        openModal(photo);
+        history.pushState({ modalOpen: true, photo: photo }, '', '');
+    }
+
     // Close the modal
     function closeModal() {
-        modal.style.display = 'none';
+        modal.classList.remove('open');
         modalOpen = false;
-        
+
         // If we're closing from a history state, don't add another history entry
         if (history.state && history.state.modalOpen) {
             history.back();
@@ -178,17 +245,18 @@ document.addEventListener('DOMContentLoaded', function () {
     // Also check on resize in case content height changes
     window.addEventListener('resize', checkScrollPosition);
 
+    // Column width changes on resize → recompute every tile's row span.
+    window.addEventListener('resize', recomputeSpans);
+
     // Handle browser back/forward buttons
     window.addEventListener('popstate', function(event) {
         if (modalOpen && (!event.state || !event.state.modalOpen)) {
             // Back button pressed while modal is open - close the modal
-            modal.style.display = 'none';
+            modal.classList.remove('open');
             modalOpen = false;
         } else if (!modalOpen && event.state && event.state.modalOpen) {
             // Forward button pressed to reopen modal
-            fullSizeImage.src = event.state.imageUrl;
-            modal.style.display = 'block';
-            modalOpen = true;
+            openModal(event.state.photo);
         }
     });
 
@@ -197,8 +265,10 @@ document.addEventListener('DOMContentLoaded', function () {
         closeModal();
     });
 
-    window.addEventListener('click', function (event) {
-        if (event.target === modal) {
+    // Click on the backdrop (anywhere outside the image and info panel) closes the modal.
+    // The close button has its own handler, so exclude it here to avoid double-closing.
+    modal.addEventListener('click', function (event) {
+        if (!event.target.closest('.modal-content, .modal-info, .close-button')) {
             closeModal();
         }
     });

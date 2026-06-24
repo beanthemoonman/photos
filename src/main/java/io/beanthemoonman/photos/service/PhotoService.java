@@ -37,11 +37,15 @@ public class PhotoService {
 
   private final ThumbnailHasher thumbnailHasher;
 
+  private final MetadataService metadataService;
+
   @Autowired
-  public PhotoService(PhotosConfig config, ThumbnailService thumbnailService, ThumbnailHasher thumbnailHasher) {
+  public PhotoService(PhotosConfig config, ThumbnailService thumbnailService, ThumbnailHasher thumbnailHasher,
+      MetadataService metadataService) {
     this.config = config;
     this.thumbnailService = thumbnailService;
     this.thumbnailHasher = thumbnailHasher;
+    this.metadataService = metadataService;
 
     createDirectoryIfNotExists(config.getDirectoryPath());
     createDirectoryIfNotExists(thumbnailHasher.getCacheDir());
@@ -82,7 +86,9 @@ public class PhotoService {
           String thumbnailUrl = "/api/photos/" + filename + "/thumbnail";
           String fullSizeUrl = "/api/photos/" + filename + "/full";
 
-          photos.add(new Photo(filename, filename, thumbnailUrl, fullSizeUrl));
+          Photo photo = new Photo(filename, filename, thumbnailUrl, fullSizeUrl);
+          metadataService.enrich(photoPath, photo);
+          photos.add(photo);
         }
       }
 
@@ -107,7 +113,9 @@ public class PhotoService {
         String thumbnailUrl = "/api/photos/" + id + "/thumbnail";
         String fullSizeUrl = "/api/photos/" + id + "/full";
 
-        return new Photo(id, filename, thumbnailUrl, fullSizeUrl);
+        Photo photo = new Photo(id, filename, thumbnailUrl, fullSizeUrl);
+        metadataService.enrich(photoPath, photo);
+        return photo;
       }
     } catch (IOException e) {
       logger.error("Error finding photo with id: {}", id, e);
@@ -189,8 +197,11 @@ public class PhotoService {
               // Use "lastModifiedTime" or "creationTime" based on your needs
               long time1 = Files.getLastModifiedTime(path1).toMillis();
               long time2 = Files.getLastModifiedTime(path2).toMillis();
-              // Sort in descending order (newest first)
-              return Long.compare(time2, time1);
+              // Sort newest-first, with filename as a stable tiebreaker so pagination is
+              // deterministic across requests (equal mtimes otherwise reorder => shuffled pages).
+              int byTime = Long.compare(time2, time1);
+              return byTime != 0 ? byTime : path1.getFileName().toString()
+                  .compareTo(path2.getFileName().toString());
             } catch (IOException e) {
               logger.error("Error comparing file timestamps", e);
               return 0;

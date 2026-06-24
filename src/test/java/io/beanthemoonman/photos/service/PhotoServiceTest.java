@@ -67,7 +67,7 @@ class PhotoServiceTest {
     Files.write(testImagePath, "test image data".getBytes());
 
     // Initialize service with mocked dependencies
-    photoService = new PhotoService(photosConfig, thumbnailService, thumbnailHasher);
+    photoService = new PhotoService(photosConfig, thumbnailService, thumbnailHasher, new MetadataService());
   }
 
   @Test

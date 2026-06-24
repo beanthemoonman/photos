@@ -1,137 +1,186 @@
 /**
- * Styles for the photo gallery.
+ * Styles for the photo gallery. Editorial redesign aligned with the wireframe prototype:
+ * Fraunces / Inter / JetBrains Mono, warm palette, masonry layout, split modal.
  */
 
 /* CSS Variables for theming */
 :root {
     /* Light theme (default) */
-    --bg-color: #f4f4f4;
-    --text-color: #333;
-    --card-bg-color: #fff;
-    --card-shadow: rgba(0, 0, 0, 0.1);
-    --card-shadow-hover: rgba(0, 0, 0, 0.2);
-    --primary-color: #3498db;
-    --primary-color-hover: #2980b9;
-    --disabled-color: #bdc3c7;
+    --bg-color: #f6f5f2;
+    --text-color: #1c1b19;
+    --muted: #8c8a84;
+    --border: rgba(0, 0, 0, 0.14);
+    --chip-bg: #ffffff;
+    --tile-bg: #e9e7e2;
+    --overlay-bg: rgba(20, 20, 20, 0.82);
     --error-color: #e74c3c;
-    --modal-bg-color: rgba(0, 0, 0, 0.9);
-    --modal-text-color: #f1f1f1;
-    --modal-text-hover: #bbb;
 }
 
 /* Dark theme */
 [data-theme="dark"] {
-    --bg-color: #222;
-    --text-color: #f1f1f1;
-    --card-bg-color: #333;
-    --card-shadow: rgba(0, 0, 0, 0.3);
-    --card-shadow-hover: rgba(0, 0, 0, 0.4);
-    --primary-color: #2980b9;
-    --primary-color-hover: #3498db;
-    --disabled-color: #555;
+    --bg-color: #161616;
+    --text-color: #f2f1ee;
+    --muted: #8a8a86;
+    --border: rgba(255, 255, 255, 0.16);
+    --chip-bg: #222221;
+    --tile-bg: #222221;
+    --overlay-bg: rgba(10, 10, 10, 0.86);
     --error-color: #e74c3c;
-    --modal-bg-color: rgba(0, 0, 0, 0.95);
-    --modal-text-color: #f1f1f1;
-    --modal-text-hover: #fff;
 }
+
+* { box-sizing: border-box; }
 
 /* General styles */
 body {
-    font-family: Arial, sans-serif;
+    font-family: Inter, system-ui, sans-serif;
     line-height: 1.6;
     margin: 0;
     padding: 0;
     background-color: var(--bg-color);
     color: var(--text-color);
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1320px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 0 28px 80px;
 }
 
-/* Header with theme toggle */
+/* Header */
 .header {
     display: flex;
+    align-items: flex-end;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
+    padding: 46px 0 30px;
+}
+
+.header-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
 }
 
 h1 {
+    font-family: Fraunces, Georgia, serif;
+    font-weight: 500;
+    font-size: 40px;
+    line-height: 1;
     margin: 0;
+    letter-spacing: -0.01em;
 }
 
-/* Theme toggle button */
+/* Theme toggle pill */
 .theme-toggle {
-    background-color: var(--card-bg-color);
-    color: var(--text-color);
-    border: 1px solid var(--text-color);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
     cursor: pointer;
+    background-color: var(--chip-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    height: 40px;
+    padding: 0 16px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s, color 0.3s, transform 0.2s;
+    gap: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
 .theme-toggle:hover {
-    transform: scale(1.1);
+    border-color: var(--text-color);
 }
 
 .theme-toggle:focus {
     outline: none;
-    box-shadow: 0 0 0 2px var(--primary-color);
+    box-shadow: 0 0 0 2px var(--border);
 }
 
-/* Photo carousel */
+.theme-toggle-icon {
+    font-size: 14px;
+}
+
+/* Masonry photo grid.
+   Grid (not CSS `columns`) so appended tiles never reflow the ones already on
+   screen: each tile spans a JS-computed number of 8px rows, placed in source
+   order. `columns` rebalances every item on append, which looked like shuffling. */
 .photo-carousel {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 24px;
-    margin-bottom: 40px;
+    grid-auto-rows: 8px;
+    gap: 18px;
+    align-items: start;
 }
 
 .photo {
-    background-color: var(--card-bg-color);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px var(--card-shadow);
+    margin: 0;
+    cursor: pointer;
+    border-radius: 14px;
     overflow: hidden;
-    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
     position: relative;
-    display: block;
+    background-color: var(--tile-bg);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+    transition: box-shadow 0.35s ease;
+    animation: tile-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 .photo:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 8px 25px var(--card-shadow-hover);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+}
+
+/* Wide panoramas span the whole gallery width instead of squishing into one column. */
+.photo.panorama {
+    grid-column: 1 / -1;
 }
 
 .photo img {
     width: 100%;
-    height: 220px;
-    object-fit: cover;
-    cursor: pointer;
-    transition: transform 0.3s ease;
     display: block;
-    vertical-align: bottom;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .photo:hover img {
-    transform: scale(1.05);
+    transform: scale(1.045);
+}
+
+.photo figcaption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 34px 16px 13px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.62), transparent);
+    font-family: Fraunces, Georgia, serif;
+    font-size: 15px;
+    color: #fff;
+    line-height: 1.15;
+}
+
+.photo:hover figcaption {
+    opacity: 1;
 }
 
 /* Loading and error states */
 .loading, .error, .no-photos {
-    grid-column: 1 / -1;
     text-align: center;
     padding: 50px;
     font-size: 18px;
+    color: var(--muted);
 }
 
 .error {
@@ -143,105 +192,206 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 40px 20px;
+    padding: 30px 20px 0;
     gap: 12px;
-    color: var(--text-color);
-    font-size: 16px;
-    font-weight: 500;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
 }
 
 .loading-spinner {
-    width: 24px;
-    height: 24px;
-    border: 3px solid var(--disabled-color);
-    border-top: 3px solid var(--primary-color);
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--text-color);
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 0.9s linear infinite;
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to { transform: rotate(360deg); }
 }
 
-/* Smooth scroll behavior */
-html {
-    scroll-behavior: smooth;
+@keyframes tile-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Modal for full-size images */
+@keyframes ov-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes img-in {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes panel-in {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Split modal */
 .modal {
     display: none;
     position: fixed;
+    inset: 0;
     z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--modal-bg-color);
+    background-color: var(--overlay-bg);
+    backdrop-filter: blur(8px);
     overflow: auto;
 }
 
+.modal.open {
+    display: flex;
+    animation: ov-in 0.28s ease both;
+}
+
+.modal-stage {
+    margin: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    max-width: 1500px;
+    width: 100%;
+    align-items: stretch;
+    justify-content: center;
+    padding: 30px;
+}
+
+.modal-image-wrap {
+    flex: 1 1 540px;
+    min-width: 300px;
+    max-width: 1040px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .modal-content {
-    display: block;
-    margin: 50px auto;
-    max-width: 90%;
-    max-height: 80vh;
+    max-width: 100%;
+    max-height: 86vh;
     object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+    animation: img-in 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.modal-info {
+    flex: 0 1 320px;
+    min-width: 260px;
+    align-self: center;
+    padding: 8px 10px 8px 34px;
+    animation: panel-in 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) 0.06s both;
+    color: #ECECEC;
+}
+
+.modal-info .modal-date {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.62);
+    margin-bottom: 26px;
+}
+
+.modal-info dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+.modal-info dt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modal-info dd {
+    margin: 0;
+    font-size: 13.5px;
+    text-align: right;
+    color: #fff;
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-variant-numeric: tabular-nums;
+}
+
+.modal-fullsize {
+    display: inline-block;
+    margin-top: 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 2px;
+    transition: color 0.3s, border-color 0.3s;
+}
+
+.modal-fullsize:hover {
+    color: #fff;
+    border-color: #fff;
 }
 
 .close-button {
-    position: absolute;
-    top: 15px;
-    right: 35px;
-    color: var(--modal-text-color);
-    font-size: 40px;
-    font-weight: bold;
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    z-index: 1002;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background-color: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
     cursor: pointer;
-    transition: color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    transition: background-color 0.3s;
 }
 
 .close-button:hover {
-    color: var(--modal-text-hover);
+    background-color: rgba(0, 0, 0, 0.7);
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+    .container {
+        padding: 0 16px 60px;
+    }
+
+    .header {
+        padding: 30px 0 24px;
+    }
+
+    h1 {
+        font-size: 30px;
+    }
+
     .photo-carousel {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 10px;
     }
 
-    .photo img {
-        height: 150px;
+    .modal-stage {
+        padding: 16px;
     }
 
-    .modal-content {
-        max-width: 85%;
-        max-height: 70vh;
-        margin: 80px 80px 20px 20px;
-        object-fit: contain;
-    }
-    
-    .close-button {
-        position: fixed;
-        top: 15px;
-        right: 15px;
-        font-size: 32px;
-        background-color: rgba(0, 0, 0, 0.8);
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1002;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        color: white;
-    }
-    
-    .close-button:hover {
-        background-color: rgba(0, 0, 0, 0.9);
-        border-color: rgba(255, 255, 255, 0.5);
+    .modal-info {
+        flex-basis: 100%;
+        padding: 20px 4px 0;
     }
 }
